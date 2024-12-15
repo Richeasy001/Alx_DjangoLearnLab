@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from rest_framework import generics
+from django.shortcuts import render, get_object_or_404
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
@@ -7,14 +7,11 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.views import APIView
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-
 
 
 # User registration view
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.all()  # Access the custom user model
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
@@ -25,6 +22,7 @@ class RegisterView(generics.CreateAPIView):
             "user": response.data,
             "token": token.key
         })
+
 
 # User login view
 class LoginView(ObtainAuthToken):
@@ -37,18 +35,20 @@ class LoginView(ObtainAuthToken):
             "user": UserSerializer(user).data
         })
 
+
 # User profile view
 class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access their profile
 
     def get(self, request):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
-# follower and unfollowers
+
+# Follow a user
 class FollowUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Only authenticated users can follow others
 
     def post(self, request, user_id):
         user_to_follow = get_object_or_404(User, id=user_id)
@@ -57,8 +57,10 @@ class FollowUserView(APIView):
         request.user.following.add(user_to_follow)
         return Response({'message': f'You are now following {user_to_follow.username}.'}, status=status.HTTP_200_OK)
 
+
+# Unfollow a user
 class UnfollowUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]  # Only authenticated users can unfollow others
 
     def post(self, request, user_id):
         user_to_unfollow = get_object_or_404(User, id=user_id)
