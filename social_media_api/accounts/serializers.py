@@ -13,6 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'bio', 'profile_picture', 'followers']
 
 class RegisterSerializer(serializers.ModelSerializer):
+    # Adding the serializers.CharField() for password fields as required
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
@@ -27,11 +28,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # Create the new user
+        # Using get_user_model().objects.create_user to create the new user
         user = User.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],
-            password=validated_data['password']  # Use create_user to handle password hashing
+            password=validated_data['password']  # create_user handles password hashing
         )
         
         # Generate a token for the user
